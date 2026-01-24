@@ -7,5 +7,8 @@ import { Component, signal } from '@angular/core';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('cms');
+  selectedFeature = 'Documents';
+  swithView(selectedFeature:string){
+      this.selectedFeature = selectedFeature;
+  }
 }
