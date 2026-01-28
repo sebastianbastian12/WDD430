@@ -10,5 +10,5 @@ import { Contact } from '../contact.model';
 export class ContactDetail {
 
   @Input() contact: Contact;
-  /* contact: Contact = new Contact ('1', 'R. Kent Jackson', 'Jackson', 'jacksonk@byui.edu', '208-496-3771', 'images/jacksonk.jpg', null) */
+  
 }
