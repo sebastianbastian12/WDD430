@@ -20,6 +20,7 @@ import { appDropdownMenuDirective } from './shared/dropdownMenu.directive';
 import { AppRoutingModule } from './app-routing.module';
 import { DocumentEdit } from './documents/document-edit/document-edit';
 import { ContactEdit } from './contacts/contact-edit/contact-edit';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { ContactEdit } from './contacts/contact-edit/contact-edit';
   imports: [
     BrowserModule,
     appDropdownMenuDirective,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
