@@ -1,22 +1,26 @@
 <div class="panel panel-default">
-    <div class="panel-heading">
-        <div class="row">
-            <div class="col-xs-8">
-                <h3 class="text-left" style="margin-top: 5px;"><strong>Contacts</strong></h3>
-            </div>
-            <div class="col-xs-4 text-right">
-                <a class="btn btn-success" routerLink="new">New Contact</a>
-            </div>
-        </div>
+  <div class="panel-heading">
+    <div class="row" style="padding: 12px;">
+      <span class="title pad-left-right">Contacts</span>
     </div>
-    <div class="panel-body">
-        <div class="row">
-            <div class="col-xs-12">
-                <cms-contact-item
-                *ngFor="let contact of contacts"
-                [contact]="contact"
-                ></cms-contact-item>
-            </div>
-        </div>
+    <div class="row" style="padding: 10px;">
+      <div class="input-group pull-left pad-left-right col-xs-7">
+        <input type="text" class="form-control" placeholder="Entere the search value" #searchBox (keyup)="search(searchBox.value)">
+        <div
+          class="glyphicon glyphicon-search input-group-addon"
+          (click)="search(searchBox.value)"
+        ></div>
+      </div>
+      <div class="pull-right pad-left-right">
+        <a class="btn btn-success" [routerLink]="['new']">New Contact</a>
+      </div>
     </div>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-xs-12">
+        <cms-contact-item *ngFor="let contact of contacts | contactsFilter: term"  [contact]="contact"></cms-contact-item>
+      </div>
+    </div>
+  </div>
 </div>
