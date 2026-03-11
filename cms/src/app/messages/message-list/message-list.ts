@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Message } from '../message.model';
 import { MessageService } from '../message.service';
 import { Subscription } from 'rxjs';
@@ -14,18 +14,17 @@ export class MessageList implements OnInit, OnDestroy{
   messages: Message[]=[]
   private subscription: Subscription;
 
-  constructor(private messageService: MessageService){}
+  constructor(private messageService: MessageService, private cd: ChangeDetectorRef){}
 
   ngOnInit(){
     this.subscription = this.messageService.messageChangedEvent
     .subscribe (
       (messages: Message[]) => {
         this.messages = messages;
+        this.cd.detectChanges();
       }
     )
-
     this.messageService.getMessages();
-
   }
 
   ngOnDestroy(): void {

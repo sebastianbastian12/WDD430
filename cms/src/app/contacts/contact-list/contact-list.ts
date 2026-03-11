@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Contact } from '../contact.model';
 import { ContactService } from '../contact.service';
 import { Subscription } from 'rxjs';
@@ -15,7 +15,7 @@ export class ContactList implements OnInit, OnDestroy{
   private subscription: Subscription
   term: string = '';
 
-  constructor(private contactService: ContactService){}
+  constructor(private contactService: ContactService, private cd: ChangeDetectorRef){}
 
   ngOnInit(){
 
@@ -23,6 +23,7 @@ export class ContactList implements OnInit, OnDestroy{
       .subscribe(
         (contactList: Contact[]) => {
           this.contacts = contactList;
+          this.cd.detectChanges();
         }
       )
     this.contactService.getContacts();

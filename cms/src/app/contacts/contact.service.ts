@@ -51,7 +51,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
             }
         );
 
-/*        return this.contacts.slice(); */
+
     }
 
     getMaxId(): number {
