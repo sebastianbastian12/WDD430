@@ -17,18 +17,18 @@ export class MessageService {
     }
 
     getMessages(){
-        this.http.get<Message[]>('https://cms-database-32de3-default-rtdb.firebaseio.com/messages.json')
+        this.http.get<{message: String, messages: Message[]}>('http://localhost:3000/messages')
             .subscribe(
-                (messages: Message[]) => {
-                    this.messages = messages ? messages : [];
-                    this.maxMessageId = this.getMaxId();
-                    this.messageChangedEvent.emit(this.messages.slice());
+                (responseData) => {
+                    this.messages = responseData.messages;
+                    this.sortAndSend();
                 },
-            (error: any) => {
-                console.error('Error fetching messages:', error);
-            }
-        )
-    }
+                (error: any) => {
+                    console.log(error);
+                }
+            );
+        }
+       
 
     storeMessages() {
         const messagesString = JSON.stringify(this.messages);
@@ -56,19 +56,36 @@ export class MessageService {
         return maxId;
     }
 
+    sortAndSend(){
+        this.messageChangedEvent.next(this.messages.slice());
+   }
+
 
 
     getMessage(id:string): Message {
         return this.messages.find(m => m.id === id) || null;
     }
 
+
     addMessage(message: Message){
-      if (!message) return;
+        if (!message) {
+            return;
+        }
+    
+        message.id = ''
 
-      this.maxMessageId++;
-      message.id = this.maxMessageId.toString();
-      this.messages.push(message);
+        const headers = new HttpHeaders ({'Content-Type': 'application/json'});
 
-      this.storeMessages();
+        this.http.post<{ message: String, newMessage: Message}> (
+            'http://localhost:3000/messages',
+            message,
+            { headers: headers}
+        )
+        .subscribe(
+            (responseData) => {
+                this.messages.push(responseData.newMessage);
+                this.sortAndSend();
+            }
+        );
     }
 }

@@ -52,6 +52,7 @@ export class ContactEdit implements OnInit{
 
     const newContact = new Contact (
       '',
+      value.id,
       value.name,
       value.email,
       value.phone,

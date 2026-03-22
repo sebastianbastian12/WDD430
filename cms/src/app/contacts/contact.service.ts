@@ -31,28 +31,18 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
         });
     }
 
-    getContacts() {
-       this.http.get<Contact[]>('https://cms-database-32de3-default-rtdb.firebaseio.com/contacts.json')
-        .subscribe(
-            (contacts: Contact[]) => {
-                this.contacts = contacts ? contacts : [];
-                this.maxContactId =  this.getMaxId();
-
-                this.contacts.sort((a, b) => {
-                    if (a.name < b.name) return -1;
-                    if (a.name < b.name) return 1;
-                    return 0;
-                });
-
-                this.contactListChangedEvent.next(this.contacts.slice());
-            },
-            (error: any) => {
-                console.error('Error fetching contacts:', error);
-            }
-        );
-
-
-    }
+    getContacts(){
+        this.http.get<{message: String, contacts: Contact[]}>('http://localhost:3000/contacts')
+            .subscribe(
+                (responseData) => {
+                    this.contacts = responseData.contacts;
+                    this.sortAndSend();
+                },
+                (error: any) => {
+                    console.log(error);
+                }
+            );
+        }
 
     getMaxId(): number {
         let maxId = 0;
@@ -66,6 +56,15 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
             return maxId;
     }
 
+    sortAndSend(){
+    this.contacts.sort((a, b) => {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+    });
+    this.contactListChangedEvent.next(this.contacts.slice());
+   }
+
     getContact(id: string): Contact {
         for(const contact of this.contacts){
             if(contact.id === id){
@@ -75,50 +74,71 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
         return null
     }
 
-    addContact(newContact: Contact) {
-        if (!newContact){
+    addContact(contact: Contact){
+        if (!contact) {
             return;
         }
+    
+        contact.id = ''
 
-        this.maxContactId++;
-        newContact.id = this.maxContactId.toString();
-        this.contacts.push(newContact);
+        const headers = new HttpHeaders ({'Content-Type': 'application/json'});
 
-        this.storeContacts();
-
+        this.http.post<{ message: String, contact: Contact}> (
+            'http://localhost:3000/contacts',
+            contact,
+            { headers: headers}
+        )
+        .subscribe(
+            (responseData) => {
+                this.contacts.push(responseData.contact);
+                this.sortAndSend();
+            }
+        );
     }
 
     updateContact(originalContact: Contact, newContact: Contact){
-        if (!originalContact || !newContact) {
-            return;
-        }
-
-        const pos = this.contacts.indexOf(originalContact);
-
-        if (pos < 0 ) {
-            return;
-        }
-
-        newContact.id = originalContact.id;
-
-        this.contacts[pos] = newContact;
-
-        this.storeContacts();
-
+    if (!originalContact || !newContact) {
+        return;
     }
 
+    const pos = this.contacts.findIndex(c => c.id === originalContact.id);
 
+    if (pos < 0 ) {
+        return;
+    }
 
+    newContact.id = originalContact.id;
+    newContact._id = originalContact._id;
+
+    const headers = new HttpHeaders ({'Content-Type': 'application/json'});
+
+    this.http.put('http://localhost:3000/contacts/' + originalContact.id,
+        newContact, { headers: headers})
+        .subscribe(
+            (response) => {
+                this.contacts[pos] = newContact;
+                this.sortAndSend();
+            }
+        );
+    }
+    
     deleteContact(contact: Contact) {
         if (!contact) {
             return;
         }
-        const pos = this.contacts.indexOf(contact);
+
+        const pos = this.contacts.findIndex(c => c.id === contact.id);
+
         if (pos < 0) {
             return;
         }
 
-        this.contacts.splice(pos, 1);
-        this.storeContacts();
+        this.http.delete('http://localhost:3000/contacts/' + contact.id)
+            .subscribe(
+                (response) => {
+                    this.contacts.slice(pos, 1);
+                    this.sortAndSend();
+                }
+            );
     }
 }

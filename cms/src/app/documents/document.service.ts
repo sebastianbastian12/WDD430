@@ -2,6 +2,7 @@ import { EventEmitter, Injectable } from "@angular/core";
 import { Document } from "./document.model";
 import { BehaviorSubject, Subject } from "rxjs";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { ConstantPool } from "@angular/compiler";
 
 @Injectable({
     providedIn: 'root'
@@ -34,25 +35,16 @@ export class DocumentService {
     }
 
     getDocuments(){
-
-        this.http.get<Document[]>('https://cms-database-32de3-default-rtdb.firebaseio.com/documents.json')
+        this.http.get<{message: String, documents: Document[]}>('http://localhost:3000/documents')
             .subscribe(
-                (documents: Document[]) => {
-                    this.documents = documents ? documents : [];
-                    this.maxDocumentId = this.getMaxId();
-
-                    this.documents.sort((a, b) => {
-                        if (a.name < b.name) return -1;
-                        if (a.name > b.name) return 1;
-                        return 0;
-                    })
-
-                    this.documentListChangedEvent.next(this.documents.slice());
+                (responseData) => {
+                    this.documents = responseData.documents;
+                    this.sortAndSend();
                 },
                 (error: any) => {
-                    console.log('An error occurred while fetching documents:', error);
+                    console.log(error);
                 }
-            )
+            );
         }
    
     getDocument(id:string):Document {
@@ -78,16 +70,35 @@ export class DocumentService {
         return maxId;
    }
 
-   addDocument(newDocument: Document){
-    if (!newDocument){
-        return;
-    }
+   sortAndSend(){
+    this.documents.sort((a, b) => {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+    });
+    this.documentListChangedEvent.next(this.documents.slice());
+   }
 
-    this.maxDocumentId++;
-    newDocument.id = this.maxDocumentId.toString();
-    this.documents.push(newDocument);
+   addDocument(document: Document){
+        if (!document) {
+            return;
+        }
+    
+        document.id = ''
 
-    this.storeDocuments();
+        const headers = new HttpHeaders ({'Content-Type': 'application/json'});
+
+        this.http.post<{ message: String, document: Document}> (
+            'http://localhost:3000/documents',
+            document,
+            { headers: headers}
+        )
+        .subscribe(
+            (responseData) => {
+                this.documents.push(responseData.document);
+                this.sortAndSend();
+            }
+        );
    }
 
    updateDocument(originalDocument: Document, newDocument: Document){
@@ -95,18 +106,25 @@ export class DocumentService {
         return;
     }
 
-    const pos = this.documents.indexOf(originalDocument);
+    const pos = this.documents.findIndex(d => d.id === originalDocument.id);
 
     if (pos < 0 ) {
         return;
     }
 
     newDocument.id = originalDocument.id;
+    newDocument._id = originalDocument._id;
 
-    this.documents[pos] = newDocument;
+    const headers = new HttpHeaders ({'Content-Type': 'application/json'});
 
-    this.storeDocuments();
-
+    this.http.put('http://localhost:3000/documents/' + originalDocument.id,
+        newDocument, { headers: headers})
+        .subscribe(
+            (response: any) => {
+                this.documents[pos] = newDocument;
+                this.sortAndSend();
+            }
+        );
    }
 
     deleteDocument(document: Document) {
@@ -114,14 +132,18 @@ export class DocumentService {
             return;
         }
 
-        const pos = this.documents.indexOf(document);
+        const pos = this.documents.findIndex(d => d.id === document.id);
 
         if (pos < 0) {
             return;
         }
 
-        this.documents.splice(pos, 1);
-
-        this.storeDocuments();
+        this.http.delete('http://localhost:3000/documents/' + document.id)
+            .subscribe(
+                (response: any) => {
+                    this.documents.slice(pos, 1);
+                    this.sortAndSend();
+                }
+            );
     }
 }

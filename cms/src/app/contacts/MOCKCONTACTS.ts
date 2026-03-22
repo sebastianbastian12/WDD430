@@ -278,4 +278,4 @@ export const MOCKCONTACTS: Contact[] = [
     }
   ]
   }
-];
+] as any[];
